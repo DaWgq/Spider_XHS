@@ -1,0 +1,34 @@
+/* Doge palette: parchment, honey gold and warm brown. */
+.app-icon{display:inline-block;vertical-align:middle;flex-shrink:0}
+.account-name{font-size:12px;color:#8a795a}
+.signin-shell{display:grid;grid-template-columns:minmax(0,48fr) minmax(0,52fr);min-height:100vh;background:#fffefb}
+.signin-story{position:relative;overflow:hidden;background:linear-gradient(145deg,#fff8dc 0%,#f9edbc 55%,#eed691 100%);padding:36px 8% 28px;display:flex;flex-direction:column;min-height:100vh}
+.signin-story:before{content:"";position:absolute;width:550px;height:550px;right:-300px;top:-260px;border:1px solid #b78c2d25;border-radius:50%;box-shadow:0 0 0 65px #bc902608,0 0 0 130px #bc902605}
+.signin-brand{display:flex;align-items:center;gap:12px;font-size:19px;font-weight:700;color:#544321;z-index:1;white-space:nowrap}
+.signin-brand small{display:block;color:#ab935e;letter-spacing:2px;font-size:9px;font-weight:500;margin-top:3px}
+.signin-intro{margin:auto 0;padding-top:24px;position:relative;z-index:1}
+.signin-eyebrow{font-size:10px;color:#9e7a21;font-weight:600;letter-spacing:2px}
+.signin-intro h1{font-size:clamp(30px,2.7vw,42px);font-weight:650;line-height:1.35;letter-spacing:-1.6px;color:#57431a;margin:16px 0 12px}
+.signin-intro>p{font-size:14px;line-height:1.85;color:#9a8249;margin:0}
+.signin-art{height:clamp(230px,38vh,380px);position:relative;margin:14px 0 18px;max-width:440px;display:flex;align-items:center;justify-content:center}
+.doge-halo{position:absolute;width:85%;aspect-ratio:1;max-height:95%;border-radius:50%;background:radial-gradient(circle,#f7de8180 0%,#efd07430 58%,transparent 70%);border:1px solid #b98b2520;box-shadow:0 0 0 24px #eac9630c}
+.signin-doge{position:relative;display:block;height:100%;max-width:100%;object-fit:contain;filter:drop-shadow(0 13px 18px #8c631421)}
+.signin-features{display:flex;gap:24px;color:#9b8041;font-size:12px;white-space:nowrap}
+.signin-features span{display:flex;gap:7px;align-items:center}
+.signin-features .app-icon{width:15px;height:15px}
+.signin-copyright{font-size:10px;color:#b19b65;margin-top:22px}
+.signin-form-side{min-width:0;position:relative;display:flex;align-items:center;justify-content:center;padding:70px 50px;background:#fffefb}
+.signin-form-box{width:360px;max-width:100%}
+.signin-form-eyebrow{display:block;color:#aa821b;font-size:12px;letter-spacing:2px;margin-bottom:13px}
+.signin-form-box h2{font-size:29px;font-weight:650;color:#493a20;letter-spacing:-.5px;margin:0 0 12px}
+.signin-form-box>p{font-size:13px;color:#a29883;margin:0 0 38px}
+.signin-form-box .n-input{border-radius:8px;background:#fffefb}
+.signin-form-box .n-input__prefix{margin-right:10px;color:#b5a98e}
+.signin-form-box .n-input__prefix .app-icon{width:17px;height:17px}
+.signin-form-box .n-form-item{margin-bottom:5px}
+.signin-form-box .n-button{margin-top:12px;height:45px}
+.signin-note{display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#ab9f85;line-height:1.8;margin-top:26px}
+.signin-note .app-icon{width:14px;height:14px;margin-top:3px}
+.signin-version{position:absolute;bottom:30px;font-size:9px;color:#bdb19b;letter-spacing:2px}
+@media(max-width:1000px){.signin-story{padding:30px 8%}.signin-intro h1{font-size:32px}.signin-features{gap:13px;font-size:10px}.signin-form-side{padding:50px 35px}}
+@media(max-width:700px){.signin-shell{grid-template-columns:minmax(0,1fr)}.signin-story{display:none}.signin-form-side{min-height:100vh;padding:50px 26px}.account-name{display:none}}

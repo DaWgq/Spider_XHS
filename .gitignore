@@ -51,3 +51,7 @@ _live_session.json
 /_scratch/
 
 creator_cookie.json
+/local_data/
+/frontend/dist/
+!/tests/
+!/tests/test_system.py
