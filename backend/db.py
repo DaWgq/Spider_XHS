@@ -141,7 +141,7 @@ def session():
 def initialize():
     Base.metadata.create_all(engine)
     with session() as db:
-        for task in db.query(Task).filter(Task.status.in_(['running', 'stopping'])).all():
+        for task in db.query(Task).filter(Task.status.in_(['running', 'stopping', 'pausing'])).all():
             task.status, task.ended_at, task.reason = 'interrupted', now(), '程序退出或重启，任务已中断'
         if not db.get(Login, 1):
             db.add(Login(id=1))

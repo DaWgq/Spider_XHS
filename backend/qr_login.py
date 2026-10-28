@@ -92,7 +92,7 @@ class QRLoginManager:
 
     def start(self, owner):
         with session() as db:
-            if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping'])).limit(1)):
+            if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping', 'pausing'])).limit(1)):
                 raise HTTPException(409, '请先停止正在运行的采集任务，再切换小红书登录账号')
             updated = db.get(Login, 1).updated_at
         with self.lock:

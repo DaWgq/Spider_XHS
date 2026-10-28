@@ -6,7 +6,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = Path(os.environ.get('XHS_DATA_DIR', ROOT / 'local_data')).resolve()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 PROXIES = {'http': 'http://127.0.0.1:7897', 'https': 'http://127.0.0.1:7897'}
-NETWORK_MODE = os.environ.get('XHS_NETWORK_MODE', 'proxy').strip().lower()
+# Deployment works without a local proxy; proxy mode is an explicit opt-in.
+NETWORK_MODE = os.environ.get('XHS_NETWORK_MODE', 'direct').strip().lower()
 if NETWORK_MODE not in ('proxy', 'direct'):
     raise ValueError('XHS_NETWORK_MODE 只允许 proxy（本地代理）或 direct（云端直连）')
 

@@ -11,7 +11,7 @@ def delete_task_record(tid):
         task = db.get(Task, tid)
         if task is None:
             raise HTTPException(404, '任务不存在或已删除')
-        if task.status in ('running', 'stopping'):
+        if task.status in ('running', 'stopping', 'pausing'):
             raise HTTPException(409, '请先停止任务，等待状态变为已停止后再删除')
         db.execute(delete(TaskLog).where(TaskLog.task_id == tid))
         db.execute(delete(TaskData).where(TaskData.task_id == tid))
@@ -31,7 +31,7 @@ def delete_data_records(entity, data_ids):
         rows = db.scalars(select(model).where(model.id.in_(requested))).all()
         if len(rows) != len(requested):
             raise HTTPException(404, '数据不存在或已删除，请刷新列表后重新选择；本次未删除任何数据')
-        if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping'])).limit(1)):
+        if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping', 'pausing'])).limit(1)):
             raise HTTPException(409, '当前有任务正在采集或停止中，请先停止并等待结束，再删除数据')
         deleted_comments = 0
         deleted_count = len(rows)

@@ -2,7 +2,7 @@ import { useDialog, useMessage } from 'naive-ui'
 import { api, errorText, type Row } from './api'
 
 export function canContinueTask(row: Row) {
-  return ['partial_failed', 'failed', 'stopped', 'interrupted'].includes(row.status) && row.success_count < row.target_count
+  return ['partial_failed', 'failed', 'stopped', 'interrupted', 'paused'].includes(row.status) && row.success_count < row.target_count
 }
 
 export function useTaskContinuation() {
@@ -18,5 +18,15 @@ export function useTaskContinuation() {
       }
     })
   }
-  return { continueTask }
+  function pauseTask(row: Row, after: () => void | Promise<void>) {
+    dialog.warning({ title: '暂停采集',
+      content: '暂停后保留已完成进度，当前请求结束后不再发起新请求。之后可点击“继续采集”补采剩余笔记。',
+      positiveText: '暂停采集', negativeText: '取消',
+      onPositiveClick: async () => {
+        try { await api.post(`/tasks/${row.id}/pause`); message.success('已提交暂停请求'); await after() }
+        catch(error) { message.error(errorText(error)); return false }
+      }
+    })
+  }
+  return { continueTask, pauseTask }
 }

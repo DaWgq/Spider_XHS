@@ -38,11 +38,29 @@ def stop_task(tid):
         task = db.get(Task, tid)
         if not task:
             return None
-        if task.status == 'pending':
+        if task.status in ('pending', 'paused'):
             task.status, task.ended_at, task.reason = 'stopped', now(), '排队期间由用户停止'
-        elif task.status in ('running', 'stopping'):
+        elif task.status in ('running', 'stopping', 'pausing'):
             task.status = 'stopping'
             scheduler.cancel(tid)
+        return as_dict(task)
+
+
+def pause_task(tid):
+    with MUTEX, session() as db:
+        task = db.get(Task, tid)
+        if not task:
+            raise HTTPException(404, '任务不存在')
+        if task.status in ('pausing', 'paused'):
+            return as_dict(task)
+        if task.status not in ('pending', 'running'):
+            raise HTTPException(409, '当前任务不能暂停')
+        if task.status == 'pending':
+            task.status, task.ended_at, task.reason = 'paused', now(), '排队期间由用户暂停，继续后重新排队'
+        else:
+            task.status, task.reason = 'pausing', '正在暂停，等待当前请求结束'
+            scheduler.cancel(tid)
+        db.add(TaskLog(task_id=tid, message='用户请求暂停采集，保留已完成进度'))
         return as_dict(task)
 
 
@@ -55,7 +73,7 @@ def resume_task(tid):
         task = db.get(Task, tid)
         if not task:
             raise HTTPException(404, '任务不存在')
-        if task.status not in ('partial_failed', 'failed', 'stopped', 'interrupted'):
+        if task.status not in ('partial_failed', 'failed', 'stopped', 'interrupted', 'paused'):
             raise HTTPException(409, '当前任务正在排队、执行或已完成，不能继续采集')
         done = completed_notes(db, tid)
         # Upgrade legacy tasks using their insertion-ordered task associations.
@@ -182,6 +200,11 @@ class Scheduler:
             task = db.get(Task, tid)
             if task.status == 'stopping' and state == 'completed':
                 state, reason = 'stopped', '用户停止任务，已保存的数据保留'
+            if task.status == 'pausing' and state in ('stopped', 'completed'):
+                if succeeded < params['max_notes']:
+                    state, reason = 'paused', '用户暂停采集，已保存进度；可继续采集剩余笔记'
+                else:
+                    state, reason = 'completed', '已达到目标数量'
             task.status, task.ended_at, task.reason = state, now(), reason
         log(tid, reason, 'error' if state in ('failed', 'partial_failed') else 'info')
 

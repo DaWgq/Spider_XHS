@@ -14,6 +14,7 @@ export function time(value?: string | null) {
 export const kinds: Record<string, string> = { blogger: '博主采集', keyword: '关键词采集', notes: '指定笔记' }
 export const states: Record<string, { label: string, type: 'default' | 'info' | 'success' | 'warning' | 'error' }> = {
   pending: { label: '待执行', type: 'default' }, running: { label: '运行中', type: 'info' }, stopping: { label: '停止中', type: 'warning' },
+  pausing: { label: '暂停中', type: 'warning' }, paused: { label: '已暂停', type: 'warning' },
   stopped: { label: '已停止', type: 'default' }, completed: { label: '已完成', type: 'success' }, partial_failed: { label: '部分失败', type: 'warning' },
   failed: { label: '失败', type: 'error' }, interrupted: { label: '已中断', type: 'warning' }
 }

@@ -1,9 +1,34 @@
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 from fastapi import HTTPException
 from sqlalchemy import select, func, or_
 from .db import Blogger, Note, Comment, Task, TaskData, as_dict
 
 MODELS = {'bloggers': Blogger, 'notes': Note, 'comments': Comment}
+
+
+def task_records(db, tasks):
+    rows = [as_dict(task) for task in tasks]
+    users = {
+        row['id']: urlparse(row['target']).path.rstrip('/').split('/')[-1]
+        for row in rows if row['kind'] == 'blogger'
+    }
+    names = {}
+    if users:
+        for uid, nickname in db.execute(select(Blogger.id, Blogger.nickname).where(Blogger.id.in_(set(users.values())))):
+            if nickname and nickname.strip():
+                names[uid] = nickname.strip()
+        # Older tasks can retain notes after their blogger profile is deleted.
+        missing = set(users.values()) - names.keys()
+        if missing:
+            for uid, nickname in db.execute(select(Note.user_id, Note.nickname).where(
+                Note.user_id.in_(missing), Note.nickname.is_not(None)
+            ).order_by(Note.collected_at.desc(), Note.id)):
+                if nickname.strip():
+                    names.setdefault(uid, nickname.strip())
+    for row in rows:
+        row['display_target'] = names.get(users[row['id']], '博主昵称待获取') if row['kind'] == 'blogger' else row['target']
+    return rows
 
 
 def query_data(entity, q='', user_id='', note_id='', keyword='', note_type='', level=None,

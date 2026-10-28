@@ -10,11 +10,11 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select, func
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from .db import initialize, session, Login, Task, TaskLog, Blogger, Note, Comment, now, as_dict
-from .scheduler import scheduler, create_task, stop_task, resume_task, MUTEX
+from .scheduler import scheduler, create_task, stop_task, pause_task, resume_task, MUTEX
 from .schemas import CookieInput, TaskInput, BatchDeleteInput
 from .collector import Collector, AccessBlocked
 from .config import ProxyUnavailable, ROOT
-from .queries import MODELS, query_data, records
+from .queries import MODELS, query_data, records, task_records
 from .exports import export_file, export_filename
 from .auth import router as auth_router, authenticated, COOKIE_NAME, session_key
 from .qr_login import qr_manager
@@ -82,7 +82,7 @@ def set_login(body: CookieInput):
 def clear_login():
     # Match the QR commit lock order so a late scan cannot restore cleared credentials.
     with qr_manager.lock, MUTEX, session() as db:
-        if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping'])).limit(1)):
+        if db.scalar(select(Task.id).where(Task.status.in_(['running', 'stopping', 'pausing'])).limit(1)):
             raise HTTPException(409, '请先停止正在运行的采集任务，等待结束后再清除 Cookie')
         qr_manager.discard_all()
         row = db.get(Login, 1)
@@ -148,7 +148,7 @@ def list_tasks(page: int = Query(1, ge=1), page_size: int = Query(20, ge=1, le=1
     with session() as db:
         total = db.scalar(select(func.count()).select_from(stmt.subquery()))
         rows = db.scalars(stmt.order_by(Task.created_at.desc(), Task.id).offset((page - 1) * page_size).limit(page_size))
-        return {'items': [as_dict(row) for row in rows], 'total': total, 'page': page, 'page_size': page_size}
+        return {'items': task_records(db, rows), 'total': total, 'page': page, 'page_size': page_size}
 
 
 @app.get('/api/tasks/{tid}')
@@ -157,7 +157,12 @@ def task_detail(tid: str):
         row = db.get(Task, tid)
         if not row:
             raise HTTPException(404, '任务不存在')
-        return as_dict(row)
+        return task_records(db, [row])[0]
+
+
+@app.post('/api/tasks/{tid}/pause')
+def pause(tid: str):
+    return pause_task(tid)
 
 
 @app.post('/api/tasks/{tid}/stop')
@@ -205,9 +210,9 @@ def logs(tid: str, after: int = Query(0, ge=0), limit: int = Query(200, ge=1, le
 def stats():
     with session() as db:
         result = {key: db.scalar(select(func.count()).select_from(model)) for key, model in dict(bloggers=Blogger, notes=Note, comments=Comment, tasks=Task).items()}
-        result['running'] = db.scalar(select(func.count()).select_from(Task).where(Task.status.in_(['running', 'stopping'])))
+        result['running'] = db.scalar(select(func.count()).select_from(Task).where(Task.status.in_(['running', 'stopping', 'pausing'])))
         result['pending'] = db.scalar(select(func.count()).select_from(Task).where(Task.status == 'pending'))
-        result['recent'] = [as_dict(row) for row in db.scalars(select(Task).order_by(Task.created_at.desc()).limit(6))]
+        result['recent'] = task_records(db, db.scalars(select(Task).order_by(Task.created_at.desc()).limit(6)))
         return result
 
 
